@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('checkout from git') {
+            steps {
+                git credentialsId: 'dae69f46-9719-4a85-9d84-ae7e5dcd4d0a', url: 'https://github.com/sauravnirala/maven-web-app.git'
+            }
+        }
+        stage('validate') {
+            steps {
+                sh 'mvn validate'
+            }
+        }
+        stage('compile') {
+            steps {
+               sh 'mvn compile' 
+            }
+        }
+        stage('test') {
+            steps {
+               sh 'mvn test' 
+            }
+        }
+        stage('package') {
+            steps {
+               sh 'mvn package' 
+            }
+        }
+        stage('install') {
+            steps {
+               sh 'mvn install' 
+            }
+        }
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t webapp .'
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh '''
+                   docker stop webappcontainer || true
+                   docker rm webappcontainer || true
+                   docker run -d -p 8085:8080 --name webappcontainer webapp
+                   '''
+            }
+        }
+    }
+}
